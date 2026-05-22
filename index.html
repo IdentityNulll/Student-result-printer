@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GradePrep - Student Performance Tracker & Report Generator</title>
+    <!-- Meta Descriptions for SEO -->
+    <meta name="description" content="A premium student exam score tracker and PDF generator. Manage student grades, analyze performance stats, and print clean reports using local storage.">
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- App Container -->
+    <div class="app-container">
+        <!-- Sidebar: Add/Edit Student Form -->
+        <aside class="sidebar no-print">
+            <div class="brand">
+                <svg class="brand-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <div class="brand-text">
+                    <h1>GradePrep</h1>
+                    <span>Score & PDF Hub</span>
+                </div>
+            </div>
+
+            <!-- Student Form Card -->
+            <div class="card form-card">
+                <div class="card-header">
+                    <h2 id="form-title">Add New Student</h2>
+                    <p class="card-subtitle" id="form-subtitle">Enter exam details below</p>
+                </div>
+                
+                <form id="student-form" novalidate>
+                    <input type="hidden" id="student-id">
+                    
+                    <div class="form-group">
+                        <label for="student-name">Student Name <span class="required">*</span></label>
+                        <input type="text" id="student-name" placeholder="e.g. John Doe" required>
+                        <span class="error-msg" id="name-error">Name is required.</span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="student-class">Class / Group <span class="optional">(Optional)</span></label>
+                        <input type="text" id="student-class" placeholder="e.g. Grade 10-A">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="total-questions">Total Questions <span class="required">*</span></label>
+                            <input type="number" id="total-questions" min="1" placeholder="e.g. 50" required>
+                            <span class="error-msg" id="total-error">Must be at least 1.</span>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="correct-answers">Correct Answers <span class="required">*</span></label>
+                            <input type="number" id="correct-answers" min="0" placeholder="e.g. 42" required>
+                            <span class="error-msg" id="correct-error">Cannot exceed total questions.</span>
+                        </div>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" id="submit-btn" class="btn btn-primary">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                            <span>Add Student</span>
+                        </button>
+                        <button type="button" id="cancel-btn" class="btn btn-secondary hidden">
+                            <span>Cancel</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Quick Instructions -->
+            <div class="card instructions-card">
+                <h3>💡 Printing Tips</h3>
+                <ul>
+                    <li>Use the checkboxes in the table to select specific students to print.</li>
+                    <li>Click <strong>Print Selected</strong> to open the Print Preview.</li>
+                    <li>Adjust headers, toggle columns, and add signature fields dynamically before saving to PDF.</li>
+                </ul>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Header bar with theme toggle & options -->
+            <header class="main-header no-print">
+                <div class="header-welcome">
+                    <h2>Exam Performance Dashboard</h2>
+                    <p class="current-date" id="header-date">Friday, May 22, 2026</p>
+                </div>
+                <div class="header-actions">
+                    <!-- Theme Toggle Button -->
+                    <button id="theme-toggle" class="btn-icon" aria-label="Toggle Theme" title="Toggle Light/Dark Mode">
+                        <!-- Sun Icon -->
+                        <svg class="sun-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"></circle><line x1="12" y1="1" x2="12" y2="3"></line><line x1="12" y1="21" x2="12" y2="23"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="1" y1="12" x2="3" y2="12"></line><line x1="21" y1="12" x2="23" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+                        <!-- Moon Icon -->
+                        <svg class="moon-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+                    </button>
+                    <!-- Reset App Button -->
+                    <button id="clear-all-btn" class="btn btn-danger" title="Clear all local data">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+                        <span>Reset Data</span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Stats Grid Section -->
+            <section class="stats-grid no-print">
+                <!-- Stat Card: Total Students -->
+                <div class="card stat-card" id="stat-total-card">
+                    <div class="stat-icon-wrapper blue">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Total Students</span>
+                        <h3 class="stat-value" id="stat-total">0</h3>
+                        <span class="stat-trend neutral">Active records</span>
+                    </div>
+                </div>
+
+                <!-- Stat Card: Class Average -->
+                <div class="card stat-card" id="stat-average-card">
+                    <div class="stat-icon-wrapper purple">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Class Average</span>
+                        <h3 class="stat-value" id="stat-average">0.0%</h3>
+                        <span class="stat-trend" id="stat-average-trend">No data</span>
+                    </div>
+                </div>
+
+                <!-- Stat Card: High Score -->
+                <div class="card stat-card" id="stat-high-card">
+                    <div class="stat-icon-wrapper green">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"></path></svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Highest Score</span>
+                        <h3 class="stat-value" id="stat-high">N/A</h3>
+                        <span class="stat-trend positive" id="stat-high-student">-</span>
+                    </div>
+                </div>
+
+                <!-- Stat Card: Low Score / Passing Status -->
+                <div class="card stat-card" id="stat-low-card">
+                    <div class="stat-icon-wrapper red">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+                    </div>
+                    <div class="stat-content">
+                        <span class="stat-label">Needs Support</span>
+                        <h3 class="stat-value" id="stat-low">0</h3>
+                        <span class="stat-trend negative">Below 60%</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Table & List Card -->
+            <div class="card table-card no-print">
+                <!-- Controls Header (Search, Sort, Bulk PDF) -->
+                <div class="table-controls">
+                    <!-- Search Input -->
+                    <div class="search-box">
+                        <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+                        <input type="text" id="search-input" placeholder="Search by student name...">
+                    </div>
+
+                    <!-- Filters and Sort -->
+                    <div class="filter-actions">
+                        <div class="select-wrapper">
+                            <select id="sort-select" aria-label="Sort Records">
+                                <option value="date-desc">Newest Added</option>
+                                <option value="date-asc">Oldest Added</option>
+                                <option value="name-asc">Name (A-Z)</option>
+                                <option value="name-desc">Name (Z-A)</option>
+                                <option value="score-desc">Score (High to Low)</option>
+                                <option value="score-asc">Score (Low to High)</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Bulk PDF Actions -->
+                        <button id="print-selected-btn" class="btn btn-success" disabled>
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            <span>Print Selected (<span id="selected-count">0</span>)</span>
+                        </button>
+
+                        <button id="print-all-btn" class="btn btn-outline">
+                            <span>Print All</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Table Wrapper -->
+                <div class="table-responsive">
+                    <table id="students-table">
+                        <thead>
+                            <tr>
+                                <th class="col-checkbox">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" id="select-all-checkbox">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                </th>
+                                <th class="col-name">Student Name</th>
+                                <th class="col-class">Class / Group</th>
+                                <th class="col-score text-center">Score</th>
+                                <th class="col-pct text-center">Percentage</th>
+                                <th class="col-grade text-center">Grade</th>
+                                <th class="col-actions text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="student-rows">
+                            <!-- Injected dynamically by JS -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Empty State -->
+                <div class="empty-state hidden" id="empty-state-view">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+                    <h3>No Student Records Found</h3>
+                    <p>Enter details in the sidebar to populate your class roster and start generating reports.</p>
+                </div>
+            </div>
+
+            <!-- Grade Breakdown Chart Component -->
+            <div class="card chart-card no-print">
+                <div class="card-header">
+                    <h3>Grade Distribution</h3>
+                    <p class="card-subtitle">Visual representation of class grade spread</p>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-bars" id="grade-chart-bars">
+                        <!-- Dynamic CSS bar elements will go here -->
+                        <div class="chart-bar-wrapper">
+                            <div class="chart-bar-label">A (90-100)</div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill blue" style="width: 0%"></div></div>
+                            <div class="chart-bar-value" id="count-A">0</div>
+                        </div>
+                        <div class="chart-bar-wrapper">
+                            <div class="chart-bar-label">B (80-89)</div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill purple" style="width: 0%"></div></div>
+                            <div class="chart-bar-value" id="count-B">0</div>
+                        </div>
+                        <div class="chart-bar-wrapper">
+                            <div class="chart-bar-label">C (70-79)</div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill green" style="width: 0%"></div></div>
+                            <div class="chart-bar-value" id="count-C">0</div>
+                        </div>
+                        <div class="chart-bar-wrapper">
+                            <div class="chart-bar-label">D (60-69)</div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill orange" style="width: 0%"></div></div>
+                            <div class="chart-bar-value" id="count-D">0</div>
+                        </div>
+                        <div class="chart-bar-wrapper">
+                            <div class="chart-bar-label">F (0-59)</div>
+                            <div class="chart-bar-bg"><div class="chart-bar-fill red" style="width: 0%"></div></div>
+                            <div class="chart-bar-value" id="count-F">0</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Print Preview Backdrop / Modal -->
+    <div id="print-preview-modal" class="modal-backdrop no-print hidden">
+        <div class="modal-container">
+            <!-- Modal Header -->
+            <div class="modal-header">
+                <div>
+                    <h2>Print & PDF Settings</h2>
+                    <p class="modal-subtitle">Configure layout options before generating PDF</p>
+                </div>
+                <button class="btn-close" id="close-modal-btn" aria-label="Close settings dialog">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                </button>
+            </div>
+
+            <!-- Modal Body (Two-column: Configuration & Real-time page preview) -->
+            <div class="modal-body">
+                <!-- Configuration panel -->
+                <div class="preview-config">
+                    <div class="config-section">
+                        <h3>Header Customization</h3>
+                        
+                        <div class="form-group">
+                            <label for="print-title">Report Title</label>
+                            <input type="text" id="print-title" value="Student Performance Report">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="print-subtitle">Institution / Course</label>
+                            <input type="text" id="print-subtitle" value="Term 1 Examination Overview">
+                        </div>
+                    </div>
+
+                    <div class="config-section">
+                        <h3>Display Settings</h3>
+                        
+                        <label class="toggle-container">
+                            <input type="checkbox" id="show-print-date" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Include Generation Date</span>
+                        </label>
+
+                        <label class="toggle-container">
+                            <input type="checkbox" id="show-print-class" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Include Class/Group Column</span>
+                        </label>
+
+                        <label class="toggle-container">
+                            <input type="checkbox" id="show-print-grade" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Include Grade Column</span>
+                        </label>
+
+                        <label class="toggle-container">
+                            <input type="checkbox" id="show-print-stats" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Include Roster Statistics Block</span>
+                        </label>
+
+                        <label class="toggle-container">
+                            <input type="checkbox" id="show-print-sign" checked>
+                            <span class="toggle-slider"></span>
+                            <span class="toggle-label">Include Signature Line</span>
+                        </label>
+                    </div>
+
+                    <div class="config-actions">
+                        <button id="trigger-print-btn" class="btn btn-primary btn-block">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+                            <span>Open Print Dialog</span>
+                        </button>
+                        <p class="print-instruction-text">
+                            <strong>Note:</strong> Select <strong>"Save as PDF"</strong> in your browser's printer list to download the report as a file.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Page simulated preview -->
+                <div class="preview-canvas-wrapper">
+                    <span class="canvas-label">Page Preview (A4 Sim)</span>
+                    <div class="preview-canvas" id="print-sheet-content">
+                        <!-- Printed document sheet injected here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden element for absolute printing -->
+    <div id="print-only-container" class="print-only">
+        <!-- Exact clone of print-sheet-content will be injected here during actual printing to print beautifully -->
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
